@@ -15,8 +15,7 @@ function App() {
       const onResults = (results: face_mesh.Results) => {
         canvasCtx.save();
         canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-        canvasCtx.drawImage(
-            results.image, 0, 0, canvasElement.width, canvasElement.height);
+        canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
         if (results.multiFaceLandmarks) {
           for (const landmarks of results.multiFaceLandmarks) {
             drawConnectors(canvasCtx, landmarks, face_mesh.FACEMESH_TESSELATION, {color: '#C0C0C070', lineWidth: 1});
@@ -49,9 +48,8 @@ function App() {
     }
   }, [canvasRef]);
 
-  const videoRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
-    const videoElement = videoRef.current;
+    const videoElement = document.createElement('video');
     if (videoElement) {
       const camera = new Camera(videoElement, {
         onFrame: async () => {
@@ -62,12 +60,10 @@ function App() {
       });
       camera.start();
     }
-  }, [videoRef]);
-
+  }, []);
 
   return (
     <div className="App">
-      <video ref={videoRef}></video>
       <canvas ref={canvasRef} width="1280px" height="720px"></canvas>
     </div>
   );
