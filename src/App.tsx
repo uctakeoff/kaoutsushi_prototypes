@@ -1,11 +1,13 @@
 import { useEffect, useRef } from 'react';
 import './App.css';
 import * as face_mesh from '@mediapipe/face_mesh';
-import { drawFaces } from './drawFaces01';
+import { drawFaces } from './drawFaces02';
 
 export const App = () => {
-  const width = 1280;
-  const height = 720;
+  // const width = 1280;
+  // const height = 720;
+  const width = 512;
+  const height = 512;
   const currentFaceMesh = useRef<face_mesh.FaceMesh>();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 

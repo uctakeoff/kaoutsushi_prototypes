@@ -54,3 +54,9 @@ npx create-react-app kaoutsushi --template typescript
 cd kaoutsushi
 npm i @mediapipe/face_mesh @mediapipe/camera_utils @mediapipe/control_utils @mediapipe/drawing_utils
 ```
+
+## three.js
+```
+npm i three
+npm i -D @types/three
+```
