@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import './App.css';
 import * as face_mesh from '@mediapipe/face_mesh';
-import { drawFaces } from './drawFaces04';
+// import するファイルをすげ替えることで各種サンプルを実行できる
+import { drawFaces } from './drawFaces05';
 
 export const App = () => {
   // const width = 1280;

@@ -3,7 +3,7 @@ import * as THREE from "three";
 
 /**
  * three.js を使い face_mesh の FaceGeometry を 3D描画してみる.
- * オブジェクト座標は良さそうだが, テクスチャ座標はどうも画像上の顔の位置にはなっていない.
+ * モデル座標は良さそうだが, テクスチャ座標はどうも画像上の顔の位置にはなっていない.
  * とはいえ, 表示されたテクスチャ画像は破綻していないため全く的外れというわけでもなさそう.
  */
 export const drawFaces = (faceMesh: face_mesh.FaceMesh, canvas: HTMLCanvasElement) => {

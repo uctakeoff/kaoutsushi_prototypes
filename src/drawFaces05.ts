@@ -2,12 +2,11 @@ import * as face_mesh from '@mediapipe/face_mesh';
 import * as THREE from "three";
 
 /**
- * 2Dカメラ画像上で検出した2つの顔を入れ替える
- * モデル座標も landmarks から算出してみる
+ * 2つの顔を入れ替える機能を 3D頂点でもやってみる.
+ * landmarks から 2D座標使うより, こちらのほうが モデル座標と行列が分離しているので 後々応用しやすそう.
  */
 export const drawFaces = (faceMesh: face_mesh.FaceMesh, canvas: HTMLCanvasElement) => {
   const maxCount = 2;
-  // 左右逆にするの一旦止めるため selfieMode を false にする. 座標を左右逆にする手間を省くため
   faceMesh.setOptions({
     maxNumFaces: maxCount,
     // selfieMode: true,
@@ -21,19 +20,24 @@ export const drawFaces = (faceMesh: face_mesh.FaceMesh, canvas: HTMLCanvasElemen
   const renderer = new THREE.WebGLRenderer({ canvas });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(width, height);
-  // 背景透明にしてvideoの上にオーバーレイ表示する
   renderer.setClearColor(0x000000, 0);
 
+  console.log(face_mesh.FACE_GEOMETRY);
+
   const scene = new THREE.Scene();
-  const camera = new THREE.OrthographicCamera(0, 1, 0, 1, -100, 100);
+  const camera = new THREE.PerspectiveCamera(
+    face_mesh.FACE_GEOMETRY.DEFAULT_CAMERA_PARAMS.verticalFovDegrees,
+    width / height,
+    face_mesh.FACE_GEOMETRY.DEFAULT_CAMERA_PARAMS.near,
+    face_mesh.FACE_GEOMETRY.DEFAULT_CAMERA_PARAMS.far,
+  );
 
   faceMesh.onResults(results => {
-    // 顔が2つ以上見つかるまで保留
     if (results.multiFaceGeometry.length < maxCount) return;
 
     const meshes: {
       mesh: THREE.Mesh,
-      position: THREE.BufferAttribute,
+      position: THREE.InterleavedBufferAttribute,
       uv: THREE.BufferAttribute,
     }[] = [];
 
@@ -46,7 +50,7 @@ export const drawFaces = (faceMesh: face_mesh.FaceMesh, canvas: HTMLCanvasElemen
     for (let i = 0; i < maxCount; ++i) {
       const face = results.multiFaceGeometry[i];
       const landmarks = results.multiFaceLandmarks[i];
-      const position = new THREE.BufferAttribute(new Float32Array(landmarks.flatMap(v => [v.x, v.y, 0])), 3);
+      const position = new THREE.InterleavedBufferAttribute(new THREE.InterleavedBuffer(face.getMesh().getVertexBufferList(), 5), 3, 0);
       const uv = new THREE.BufferAttribute(new Float32Array(landmarks.flatMap(v => [v.x, v.y])), 2);
 
       const geometry = new THREE.BufferGeometry();
@@ -57,24 +61,31 @@ export const drawFaces = (faceMesh: face_mesh.FaceMesh, canvas: HTMLCanvasElemen
 
       const material = new THREE.MeshBasicMaterial({ map: texture, wireframe: false });
       const mesh = new THREE.Mesh(geometry, material);
+      mesh.matrix.elements = face.getPoseTransformMatrix().getPackedDataList();
+      mesh.matrixAutoUpdate = false;
       meshes.push({ mesh, position, uv });
     }
 
 
     faceMesh.onResults(results => {
       meshes.forEach(m => scene.remove(m.mesh));
-      if (results.multiFaceLandmarks.length >= maxCount) {
+      if (results.multiFaceGeometry.length >= maxCount) {
         texture.image = results.image as HTMLCanvasElement;
         texture.needsUpdate = true;
         for (let i = 0; i < maxCount; ++i) {
           const { mesh, position, uv } = meshes[i];
           const j = (i + 1) % results.multiFaceLandmarks.length;
-          const landmarks = results.multiFaceLandmarks[i];
+          const face = results.multiFaceGeometry[i];
           const landmarks1 = results.multiFaceLandmarks[j];
-          (position.array as Float32Array).set(landmarks.flatMap(v => [v.x, v.y, 0]));
-          position.needsUpdate = true;
-          (uv.array as Float32Array).set(landmarks1.flatMap(v => [v.x, v.y]));
-          uv.needsUpdate = true;
+          // たまに undefined になるのでチェック. TypeScriptの型であらかじめ言っといてほしい
+          if (face.getMesh() && face.getPoseTransformMatrix()) {
+            mesh.matrix.elements = face.getPoseTransformMatrix().getPackedDataList();
+            mesh.matrixAutoUpdate = false;  
+            position.data.array = face.getMesh().getVertexBufferList();
+            position.data.needsUpdate = true;
+            (uv.array as Float32Array).set(landmarks1.flatMap(v => [v.x, v.y]));
+            uv.needsUpdate = true;
+          }
           scene.add(mesh);
         }
       }
