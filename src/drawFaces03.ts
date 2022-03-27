@@ -25,10 +25,12 @@ export const drawFaces = (faceMesh: face_mesh.FaceMesh, canvas: HTMLCanvasElemen
   camera.position.z = 64;
 
   faceMesh.onResults(results => {
+    if (results.multiFaceGeometry.length <= 0) return;
+
     const face = results.multiFaceGeometry[0];
     const landmarks = results.multiFaceLandmarks[0];
     const position = new THREE.InterleavedBufferAttribute(new THREE.InterleavedBuffer(face.getMesh().getVertexBufferList(), 5), 3, 0);
-    const uv = new THREE.BufferAttribute(new Float32Array(landmarks.map(v => [v.x, v.y, v.z]).flat()), 3, true);
+    const uv = new THREE.BufferAttribute(new Float32Array(landmarks.flatMap(v => [v.x, v.y, v.z])), 3, true);
     const texture = new THREE.Texture(results.image as HTMLCanvasElement);
     // y座標だけ逆転する. 上のmap() で [v.x, 1-v.y, v.z] とするのと同じ効果.
     texture.matrix.set(1, 0, 0, 0, -1, 1, 0, 0, 1);
@@ -56,7 +58,7 @@ export const drawFaces = (faceMesh: face_mesh.FaceMesh, canvas: HTMLCanvasElemen
         mesh.rotation.y += 0.01;
         position.data.array = face.getMesh().getVertexBufferList();
         position.data.needsUpdate = true;
-        (uv.array as Float32Array).set(landmarks.map(v => [v.x, v.y, v.z]).flat());
+        (uv.array as Float32Array).set(landmarks.flatMap(v => [v.x, v.y, v.z]));
         uv.needsUpdate = true;
         texture.image = results.image as HTMLCanvasElement;
         texture.needsUpdate = true;

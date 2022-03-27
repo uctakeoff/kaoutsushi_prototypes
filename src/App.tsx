@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import './App.css';
 import * as face_mesh from '@mediapipe/face_mesh';
-import { drawFaces } from './drawFaces02';
+import { drawFaces } from './drawFaces04';
 
 export const App = () => {
   // const width = 1280;
@@ -25,8 +25,10 @@ export const App = () => {
     }
   }, [canvasRef]);
 
+  const videoRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
-    const video = document.createElement('video');
+    // const video = document.createElement('video');
+    const video = videoRef.current;
     if (video) {
       navigator.mediaDevices.getUserMedia({ video: { width, height } }).then(stream => {
         video.srcObject = stream;
@@ -47,7 +49,8 @@ export const App = () => {
 
   return (
     <div className="App">
-      <canvas ref={canvasRef} width={`${width}px`} height={`${height}px`}></canvas>
+      <video ref={videoRef} style={{position: 'absolute', left: 0, top: 0}}/>
+      <canvas ref={canvasRef} width={`${width}px`} height={`${height}px`} style={{position: 'absolute', left: 0, top: 0}}></canvas>
     </div>
   );
 }
